@@ -68,7 +68,7 @@ int fn_basic_math (char op, int a, int b)
  */
 void parse_innermost (char* line)
 {
-  printf ("Working on: %s\n", line);
+  //printf ("Working on: %s\n", line);
   int pos = 0, length = 0;
   for (int i = 0; i < strlen (line); i++)
     {
@@ -88,7 +88,7 @@ void parse_innermost (char* line)
   char subseq[length + 2];
   memcpy (subseq, &line[pos], length + 1);
   subseq[length + 1] = 0x00;
-  printf ("Inner: [%s]\n", subseq);
+  //printf ("Inner: [%s]\n", subseq);
 
   parse_buffer (subseq);
 
@@ -164,7 +164,7 @@ int parse_buffer (char* line)
             {
               pp = 0; // Turn off paren predicate.
               fn[fnc][fncc] = 0x00; // Null byte terminate the function name.
-              printf ("The function was: %s\n", fn[fnc]);
+              //printf ("The function was: %s\n", fn[fnc]);
               fnc++; // Add to the function stack.
               fncc = 0; // The function character counter.
             }
@@ -172,7 +172,7 @@ int parse_buffer (char* line)
             {
               args[fnc - 1][argsc][argscc] = 0x00; // Null byte terminate the arg value.
               arg_size[fnc - 1] = argsc;
-              printf ("The argument was: %s\n", args[fnc - 1][argsc]);
+              //printf ("The argument was: %s\n", args[fnc - 1][argsc]);
               argsc++; // Add to the argument stack.
               argscc = 0; // Reset the args character counter.
             }
@@ -212,7 +212,7 @@ int parse_buffer (char* line)
               b = fn_basic_math (fn[i][0], b, a);
             }
 
-          printf ("%d\n", b);
+          //printf ("%d\n", b);
           sprintf (line, "%d", b);
         }
       else if (strcmp ("print", fn[i]) == 0)
@@ -220,9 +220,9 @@ int parse_buffer (char* line)
           // Do a basic print of the arguments sent in
           for (int ac = 0; ac <= arg_size[fnc - 1]; ac++)
             {
-              printf ("%s ", args[fnc - 1][ac]);
+              //printf ("%s ", args[fnc - 1][ac]);
             }
-          printf ("\n"); // Courtesy newline
+          //printf ("\n"); // Courtesy newline
         }
       else
         {
@@ -249,32 +249,43 @@ int main (int argc, char *argv[])
   int  char_count;
   int  exit_flag = 0;
 
-  while (exit_flag == 0)
+  if (argc > 0)
     {
-      printf ("puny> ");
-      ch = getchar ();
-      char_count = 0;
-
-      while ((ch != '\n') && (char_count < MAXBUFFERSIZE))
+      strcpy (buffer, argv[1]);
+      parse_innermost (buffer);
+      printf ("%s\n", buffer);
+    }
+  else
+    {
+      // The interactive REPL is the default if nothing is passed in.
+      while (exit_flag == 0)
         {
-          buffer[char_count++] = ch;
+          printf ("puny> ");
           ch = getchar ();
-        }
+          char_count = 0;
 
-      buffer[char_count] = 0x00; /* null terminate */
+          while ((ch != '\n') && (char_count < MAXBUFFERSIZE))
+            {
+              buffer[char_count++] = ch;
+              ch = getchar ();
+            }
 
-      if (strcmp (buffer, "exit") == 0 || strcmp (buffer, "q") == 0)
-        {
-          exit_flag = 1;
+          buffer[char_count] = 0x00; /* null terminate */
+
+          if (strcmp (buffer, "exit") == 0 || strcmp (buffer, "q") == 0)
+            {
+              exit_flag = 1;
+            }
+          else
+            {
+              parse_innermost (buffer);
+              printf ("%s\n", buffer);
+              //exit_flag = parse_buffer (buffer);
+              //printf ("%s\n", buffer);
+            }
         }
-      else
-        {
-          parse_innermost (buffer);
-          //exit_flag = parse_buffer (buffer);
-          //printf ("%s\n", buffer);
-        }
+      printf ("Goodbye!");
     }
 
-  printf ("Goodbye!");
   return 0;
 }
