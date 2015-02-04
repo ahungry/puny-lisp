@@ -68,6 +68,7 @@ int fn_basic_math (char op, int a, int b)
  */
 void parse_innermost (char* line)
 {
+  printf ("Working on: %s\n", line);
   int pos = 0, length = 0;
   for (int i = 0; i < strlen (line); i++)
     {
@@ -84,7 +85,7 @@ void parse_innermost (char* line)
     }
 
   // Break off the inner portion into it's own string for now.
-  char subseq[length + 1];
+  char subseq[length + 2];
   memcpy (subseq, &line[pos], length + 1);
   subseq[length + 1] = 0x00;
   printf ("Inner: [%s]\n", subseq);
@@ -96,31 +97,32 @@ void parse_innermost (char* line)
   char pre[pos];
   char suf[sufc];
 
-  memcpy (pre, &line[0], pos);
-  memcpy (suf, &line[pos + length + 1], sufc);
-  pre[pos + 1] = 0x00;
-  suf[sufc + 1] = 0x00;
-
-  int mergedc = strlen (pre) + strlen (suf) + strlen (subseq);
+  int  mergedc = strlen (pre) + strlen (suf) + strlen (subseq);
   char merged[mergedc];
 
-  if (pos == 0)
+  // If this is called without a pre available it butchers the result.
+  if (pos > 0)
     {
-      sprintf (merged, "%s%s", subseq, suf);
-    }
-  else
-    {
-      sprintf (merged, "%s%s%s", pre, subseq, suf);
+      memcpy (pre, &line[0], pos);
+      pre[pos + 1] = 0x00;
+      sprintf (merged, "%s", pre);
     }
 
-  printf ("Pre: [%s]\n", pre);
-  printf ("Eval: [%s]\n", subseq);
-  printf ("Suf: [%s]\n", suf);
-  printf ("Merged glory: [%s]\n", merged);
+  sprintf (merged, "%s%s", merged, subseq);
+
+  if (sufc > 0)
+    {
+      memcpy (suf, &line[pos + length + 1], sufc);
+      suf[sufc + 1] = 0x00;
+      sprintf (merged, "%s%s", merged, suf);
+    }
+
+  //printf ("Pre: [%s]\n", pre);
+  //printf ("Eval: [%s]\n", subseq);
+  //printf ("Suf: [%s]\n", suf);
+  //printf ("Merged glory: [%s]\n", merged);
 
   strcpy (line, merged);
-
-  printf ("Line reads: %s\n", line);
 
   if (strstr (line, "("))
     {
@@ -130,6 +132,7 @@ void parse_innermost (char* line)
 
 int parse_buffer (char* line)
 {
+  //printf ("\n\nPB: %s\n\n", line);
   int poc = 0; // Keep count of parenthesis to make a balance.
   int pcc = 0; // Also keep track of closed.
   int _   = 0; // Watch for spaces to split up our input.
